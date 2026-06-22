@@ -1,11 +1,11 @@
 'use client';
 
 import React, { useRef, useMemo } from 'react';
-import { Canvas, useFrame, useThree } from '@react-three/fiber';
+import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import * as THREE from 'three';
-import { EffectComposer, Bloom, ChromaticAberration } from '@react-three/postprocessing';
-import { BlendFunction } from 'postprocessing';
+import { EffectComposer, Bloom, ChromaticAberration, Glitch, GodRays } from '@react-three/postprocessing';
+import { BlendFunction, Resizer, KernelSize } from 'postprocessing';
 
 interface HolographicDisplayProps {
   theme?: 'heat' | 'eq' | 'saturation' | 'pitch' | 'verb';
@@ -13,45 +13,45 @@ interface HolographicDisplayProps {
   intensity?: number;
 }
 
-function EmberParticles({ count = 60, color = '#FF4500', intensity = 1 }: { count?: number; color?: string; intensity?: number }) {
+function EmberParticles({ count = 70, color = '#FF4500', intensity = 1 }: { count?: number; color?: string; intensity?: number }) {
   const pointsRef = useRef<THREE.Points>(null!);
-  const positions = useMemo(() => {
-    const pos = new Float32Array(count * 3);
-    const velocities = new Float32Array(count * 3);
+  const { pos, velocities } = useMemo(() => {
+    const p = new Float32Array(count * 3);
+    const v = new Float32Array(count * 3);
     for (let i = 0; i < count * 3; i += 3) {
-      pos[i] = (Math.random() - 0.5) * 3.5;
-      pos[i + 1] = Math.random() * 2 - 1;
-      pos[i + 2] = (Math.random() - 0.5) * 3.5;
-      velocities[i] = (Math.random() - 0.5) * 0.02;
-      velocities[i + 1] = Math.random() * 0.03 + 0.01;
-      velocities[i + 2] = (Math.random() - 0.5) * 0.02;
+      p[i] = (Math.random() - 0.5) * 4;
+      p[i + 1] = Math.random() * 2.5 - 1.2;
+      p[i + 2] = (Math.random() - 0.5) * 4;
+      v[i] = (Math.random() - 0.5) * 0.025;
+      v[i + 1] = Math.random() * 0.035 + 0.012;
+      v[i + 2] = (Math.random() - 0.5) * 0.025;
     }
-    return { pos, velocities };
+    return { pos: p, velocities: v };
   }, [count]);
 
   const geometry = useMemo(() => {
     const geo = new THREE.BufferGeometry();
-    geo.setAttribute('position', new THREE.BufferAttribute(positions.pos, 3));
-    geo.setAttribute('velocity', new THREE.BufferAttribute(positions.velocities, 3));
+    geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    geo.setAttribute('velocity', new THREE.BufferAttribute(velocities, 3));
     return geo;
-  }, [positions]);
+  }, [pos, velocities]);
 
-  useFrame((state) => {
+  useFrame(() => {
     if (!pointsRef.current) return;
     const posAttr = pointsRef.current.geometry.attributes.position as THREE.BufferAttribute;
     const velAttr = pointsRef.current.geometry.attributes.velocity as THREE.BufferAttribute;
-    const posArray = posAttr.array as Float32Array;
-    const velArray = velAttr.array as Float32Array;
+    const posArr = posAttr.array as Float32Array;
+    const velArr = velAttr.array as Float32Array;
 
-    for (let i = 0; i < posArray.length; i += 3) {
-      posArray[i] += velArray[i] * intensity;
-      posArray[i + 1] += velArray[i + 1] * intensity;
-      posArray[i + 2] += velArray[i + 2] * intensity;
+    for (let i = 0; i < posArr.length; i += 3) {
+      posArr[i] += velArr[i] * intensity;
+      posArr[i + 1] += velArr[i + 1] * intensity;
+      posArr[i + 2] += velArr[i + 2] * intensity;
 
-      if (posArray[i + 1] > 3 || Math.random() < 0.005) {
-        posArray[i] = (Math.random() - 0.5) * 3.5;
-        posArray[i + 1] = -1 + Math.random() * 0.5;
-        posArray[i + 2] = (Math.random() - 0.5) * 3.5;
+      if (posArr[i + 1] > 3.5 || Math.random() < 0.006) {
+        posArr[i] = (Math.random() - 0.5) * 4;
+        posArr[i + 1] = -1.3 + Math.random() * 0.6;
+        posArr[i + 2] = (Math.random() - 0.5) * 4;
       }
     }
     posAttr.needsUpdate = true;
@@ -59,60 +59,52 @@ function EmberParticles({ count = 60, color = '#FF4500', intensity = 1 }: { coun
 
   return (
     <points ref={pointsRef} geometry={geometry}>
-      <pointsMaterial
-        size={0.035 * intensity}
-        color={color}
-        transparent
-        opacity={0.9}
-        sizeAttenuation
-        depthWrite={false}
-      />
+      <pointsMaterial size={0.04 * intensity} color={color} transparent opacity={0.95} sizeAttenuation depthWrite={false} />
     </points>
   );
 }
 
-function HeatwaveGround() {
+function HeatwaveGround({ intensity = 1 }) {
   const meshRef = useRef<THREE.Mesh>(null!);
 
   useFrame((state) => {
     if (meshRef.current) {
-      const positions = (meshRef.current.geometry.attributes.position as THREE.BufferAttribute).array as Float32Array;
-      for (let i = 0; i < positions.length; i += 3) {
-        const x = positions[i];
-        const z = positions[i + 2];
-        positions[i + 1] = Math.sin(x * 2 + state.clock.elapsedTime * 1.5) * 0.08 + 
-                           Math.sin(z * 1.8 + state.clock.elapsedTime * 1.2) * 0.06;
+      const pos = (meshRef.current.geometry.attributes.position as THREE.BufferAttribute).array as Float32Array;
+      for (let i = 0; i < pos.length; i += 3) {
+        const x = pos[i];
+        const z = pos[i + 2];
+        pos[i + 1] = Math.sin(x * 3.2 + state.clock.elapsedTime * 2.1) * 0.09 * intensity +
+                     Math.sin(z * 2.8 + state.clock.elapsedTime * 1.7) * 0.07 * intensity +
+                     Math.sin((x + z) * 1.5 + state.clock.elapsedTime * 3) * 0.04 * intensity;
       }
       (meshRef.current.geometry.attributes.position as THREE.BufferAttribute).needsUpdate = true;
     }
   });
 
   return (
-    <mesh ref={meshRef} rotation={[-Math.PI * 0.48, 0, 0]} position={[0, -2.2, 0]}>
-      <planeGeometry args={[12, 12, 32, 32]} />
+    <mesh ref={meshRef} rotation={[-Math.PI * 0.5, 0, 0]} position={[0, -2.4, 0]}>
+      <planeGeometry args={[14, 14, 48, 48]} />
       <meshPhongMaterial 
-        color="#1A1A20" 
-        emissive="#330000" 
-        emissiveIntensity={0.3}
-        shininess={10}
+        color="#0F0F12" 
+        emissive="#220000" 
+        emissiveIntensity={0.35 * intensity}
+        shininess={5}
         transparent
-        opacity={0.7}
+        opacity={0.65}
       />
     </mesh>
   );
 }
 
-function HologramObject({ theme = 'heat', variant = 'fireOrb', intensity = 1 }: { theme?: string; variant?: string; intensity?: number }) {
+function HologramObject({ theme = 'heat', variant = 'fireOrb', intensity = 1 }: any) {
   const groupRef = useRef<THREE.Group>(null!);
   const coreRef = useRef<THREE.Mesh>(null!);
 
   useFrame((state) => {
-    if (groupRef.current) {
-      groupRef.current.rotation.y = state.clock.elapsedTime * 0.12;
-    }
+    if (groupRef.current) groupRef.current.rotation.y = state.clock.elapsedTime * 0.11;
     if (coreRef.current) {
-      coreRef.current.rotation.y = state.clock.elapsedTime * 0.25;
-      coreRef.current.scale.setScalar(0.9 + Math.sin(state.clock.elapsedTime * 1.8) * 0.08 * intensity);
+      coreRef.current.rotation.y = state.clock.elapsedTime * 0.22;
+      coreRef.current.scale.setScalar(0.88 + Math.sin(state.clock.elapsedTime * 1.6) * 0.1 * intensity);
     }
   });
 
@@ -121,67 +113,69 @@ function HologramObject({ theme = 'heat', variant = 'fireOrb', intensity = 1 }: 
   return (
     <group ref={groupRef}>
       <mesh>
-        <sphereGeometry args={[2.1]} />
-        <meshPhongMaterial color={color} emissive={color} emissiveIntensity={0.35 * intensity} shininess={120} transparent opacity={0.12} wireframe />
+        <sphereGeometry args={[2.15]} />
+        <meshPhongMaterial color={color} emissive={color} emissiveIntensity={0.3 * intensity} shininess={130} transparent opacity={0.1} wireframe />
       </mesh>
 
       <mesh ref={coreRef}>
-        <icosahedronGeometry args={[1.15, 1]} />
-        <meshPhongMaterial color="#fff" emissive={color} emissiveIntensity={0.9 * intensity} shininess={90} transparent opacity={0.55} />
+        <icosahedronGeometry args={[1.2, 1]} />
+        <meshPhongMaterial color="#fff" emissive={color} emissiveIntensity={0.95 * intensity} shininess={95} transparent opacity={0.5} />
       </mesh>
 
-      <mesh rotation={[1.6, 0, 0]}>
-        <torusGeometry args={[2.6, 0.025, 16, 120]} />
-        <meshBasicMaterial color={color} transparent opacity={0.5} />
+      <mesh rotation={[1.55, 0, 0]}>
+        <torusGeometry args={[2.65, 0.028, 16, 130]} />
+        <meshBasicMaterial color={color} transparent opacity={0.55} />
       </mesh>
 
       {(variant === 'fireOrb' || variant === 'heatWave' || theme === 'heat') && (
-        <EmberParticles count={theme === 'heat' ? 75 : 45} color={color} intensity={intensity} />
+        <EmberParticles count={theme === 'heat' ? 85 : 50} color={color} intensity={intensity} />
       )}
 
-      {(variant === 'heatWave' || theme === 'heat') && <HeatwaveGround />}
+      {(variant === 'heatWave' || theme === 'heat') && <HeatwaveGround intensity={intensity} />}
 
       {theme === 'heat' && variant !== 'abstractHeat' && (
         <points>
           <bufferGeometry>
-            <bufferAttribute
-              attach="attributes-position"
-              count={25}
-              array={new Float32Array(Array.from({ length: 75 }, () => (Math.random() - 0.5) * 5))}
-              itemSize={3}
-            />
+            <bufferAttribute attach="attributes-position" count={30} array={new Float32Array(90).map(() => (Math.random() - 0.5) * 6)} itemSize={3} />
           </bufferGeometry>
-          <pointsMaterial size={0.12} color="#666" transparent opacity={0.15} sizeAttenuation depthWrite={false} />
+          <pointsMaterial size={0.15} color="#555" transparent opacity={0.12} sizeAttenuation depthWrite={false} />
         </points>
       )}
     </group>
   );
 }
 
-export default function FuturisticHologram({ theme = 'heat', variant = 'fireOrb', intensity = 1.1 }: HolographicDisplayProps) {
+export default function FuturisticHologram({ theme = 'heat', variant = 'fireOrb', intensity = 1.15 }: HolographicDisplayProps) {
   return (
-    <div className="w-full h-[480px] md:h-[580px] relative rounded-3xl overflow-hidden border border-white/10">
+    <div className="w-full h-[500px] md:h-[620px] relative rounded-3xl overflow-hidden border border-white/10 bg-black/20">
       <Canvas
-        camera={{ position: [0, 1.5, 6.5], fov: 42 }}
+        camera={{ position: [0, 2, 7], fov: 40 }}
         style={{ background: 'transparent' }}
         gl={{ alpha: true, antialias: true, preserveDrawingBuffer: true, powerPreference: "high-performance" }}
       >
-        <ambientLight intensity={0.15} />
-        <pointLight position={[8, 12, 8]} intensity={1.1} color="#ffffff" />
-        <pointLight position={[-8, -4, -6]} intensity={0.6} color={theme === 'heat' ? '#FF4500' : '#00F0FF'} />
+        <ambientLight intensity={0.12} />
+        <pointLight position={[6, 14, 6]} intensity={1.3} color="#fff" />
+        <pointLight position={[-6, -3, -8]} intensity={0.5} color={theme === 'heat' ? '#FF4500' : '#00F0FF'} />
 
         <HologramObject theme={theme} variant={variant} intensity={intensity} />
 
-        <EffectComposer>
-          <Bloom luminanceThreshold={0.15} luminanceSmoothing={0.85} height={400} intensity={1.4 * intensity} />
-          <ChromaticAberration blendFunction={BlendFunction.NORMAL} offset={[0.002 * intensity, 0.0012 * intensity]} />
+        <EffectComposer multisampling={0}>
+          <Bloom luminanceThreshold={0.12} luminanceSmoothing={0.8} height={450} intensity={1.6 * intensity} />
+          <ChromaticAberration blendFunction={BlendFunction.NORMAL} offset={[0.0022 * intensity, 0.0014 * intensity]} />
+          <Glitch 
+            delay={[1.2, 3.5]} 
+            duration={[0.2, 0.6]} 
+            strength={[0.2, 0.6]} 
+            mode="sporadic" 
+            active 
+          />
         </EffectComposer>
 
-        <OrbitControls enablePan={false} enableZoom={true} enableRotate={true} autoRotate autoRotateSpeed={0.25} minDistance={3.5} maxDistance={12} />
+        <OrbitControls enablePan={false} enableZoom={true} enableRotate={true} autoRotate autoRotateSpeed={0.2} minDistance={3.2} maxDistance={13} />
       </Canvas>
 
-      <div className="absolute bottom-5 left-1/2 -translate-x-1/2 text-[10px] tracking-[3px] text-white/35 pointer-events-none z-10">
-        DRAG TO ROTATE • {variant.toUpperCase().replace(/([A-Z])/g, ' $1')} • ANTI-GRAVITY HOLOGRAPHIC SYSTEM
+      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 text-[10px] tracking-[3.5px] text-white/30 pointer-events-none z-10 font-mono">
+        DRAG • {variant.toUpperCase().replace(/([A-Z])/g, ' $1').trim()} • VJ/X HOLOGRAPHIC SYSTEM • GLITCH + GODRAY ENERGY
       </div>
     </div>
   );
