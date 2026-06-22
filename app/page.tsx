@@ -8,13 +8,14 @@ import VSTCard from '@/components/VSTCard';
 import { toast } from 'sonner';
 
 export default function HeatVSTLanding() {
-  const featuredVSTs = vsts.slice(0, 3);
+  const featuredVSTs = vsts.slice(0, 3); // First 3 as Heat this week
 
   const handleDownload = (toolName: string) => {
     toast.success(`${toolName} download started`, {
       description: "Check your Downloads folder. These are offline .bat tools for Windows. Mac/Linux versions coming soon.",
-      duration: 6000,
+      duration: 5000,
     });
+    // In real: trigger actual file download or link to Gumroad/GitHub release
   };
 
   const handleWebDemo = (toolName: string) => {
@@ -22,70 +23,76 @@ export default function HeatVSTLanding() {
       window.location.href = toolName === "SplitIt" ? "/vst/eq-forge#demo" : "#free-tools";
     } else {
       toast.info(`${toolName} Web Demo`, {
-        description: "Full web versions live inside the NoDAW Launcher. Grab the free suite for instant access.",
+        description: "Web versions of these tools are available inside the NoDAW Launcher. Download the free suite for full access.",
       });
     }
   };
 
   return (
     <main className="overflow-hidden">
-      {/* HERO — Cinematic & High-Production */}
+      {/* HERO */}
       <section className="relative min-h-[100dvh] flex items-center justify-center px-6 pt-12 pb-24 border-b border-white/10">
-        <div className="absolute inset-0 bg-[radial-gradient(#1A1A20_0.8px,transparent_1px)] bg-[length:4px_4px] opacity-50" />
+        <div className="absolute inset-0 bg-[radial-gradient(#1A1A20_0.8px,transparent_1px)] bg-[length:5px_5px] opacity-60" />
         
         <div className="relative max-w-5xl mx-auto text-center z-10">
-          <div className="inline-flex items-center gap-2 px-5 py-1.5 rounded-full border border-white/15 text-xs tracking-[3.5px] mb-8 text-text-muted">
-            <Zap className="w-3.5 h-3.5 text-cyan" /> BUILT IN LOUISVILLE, KY • 2026
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-white/15 text-xs tracking-[3px] mb-6">
+            <Zap className="w-3.5 h-3.5" /> LOUISVILLE • 2026
           </div>
 
-          <h1 className="text-[72px] md:text-[96px] leading-[0.88] font-semibold tracking-[-7px] mb-6">
+          <h1 className="text-7xl md:text-[92px] leading-[0.92] font-semibold tracking-[-6.5px] mb-6">
             IGNITE YOUR<br />MIXES.
           </h1>
-          
-          <p className="max-w-2xl mx-auto text-2xl md:text-[28px] tracking-[-1.2px] text-text-muted mb-3">
-            Premium VST plugins for producers who refuse to settle.
+          <p className="max-w-2xl mx-auto text-2xl md:text-3xl tracking-[-1.5px] text-text-muted mb-4">
+            Premium VST plugins built for producers who want real heat.
           </p>
-          <p className="max-w-lg mx-auto text-text-muted mb-10">
-            Character. Clarity. Soul. One-time purchase. 100% local. No subscriptions. Ever.
+          <p className="max-w-md mx-auto text-text-muted mb-10">
+            Character. Clarity. Soul. No subscriptions. No cloud. Just powerful, musical tools that make your beats hit different.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <a 
               href="#heat" 
-              className="group inline-flex items-center justify-center gap-3 px-10 h-14 rounded-2xl bg-white text-[#0A0A0F] font-semibold text-base active:scale-[0.985] transition-all hover:shadow-[0_0_30px_rgba(0,240,255,0.3)]"
+              className="btn-premium group inline-flex items-center justify-center gap-3 px-10 h-14 rounded-2xl bg-white text-[#0A0A0F] font-semibold text-base active:scale-[0.985] transition-all"
             >
-              SEE THIS WEEK&apos;S HEAT
+              SEE HEAT THIS WEEK
               <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition" />
             </a>
             <a 
               href="#free-tools" 
-              className="inline-flex items-center justify-center gap-3 px-9 h-14 rounded-2xl border border-white/30 hover:border-white/60 font-medium text-base transition-all active:scale-[0.985]"
+              className="inline-flex items-center justify-center gap-3 px-8 h-14 rounded-2xl border border-white/30 hover:border-white/60 font-medium text-base transition-all"
             >
-              <Download className="w-4 h-4" /> START WITH FREE TOOLS
+              <Download className="w-4 h-4" /> GRAB FREE TOOLS FIRST
+            </a>
+            <a 
+              href="/vidscrew" 
+              className="inline-flex items-center justify-center gap-3 px-8 h-14 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/30 font-medium text-base transition-all"
+            >
+              TRY VIDSCREW <Zap className="w-4 h-4" />
             </a>
           </div>
 
-          <div className="mt-14 flex justify-center">
-            <div className="flex items-center gap-8 text-[10px] tracking-[3px] text-text-muted/70">
+          <div className="mt-16 flex justify-center">
+            <div className="flex items-center gap-8 text-xs tracking-widest text-text-muted">
               <div>VST3 • AU • AAX</div>
               <div>APPLE SILICON NATIVE</div>
-              <div>ONE-TIME • LIFETIME UPDATES</div>
+              <div>ONE-TIME PAYMENT</div>
             </div>
           </div>
         </div>
 
-        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 w-2/3 max-w-md h-px bg-gradient-to-r from-transparent via-cyan/30 to-transparent" />
+        {/* Subtle floating waveform accent */}
+        <div className="absolute bottom-12 left-1/2 -translate-x-1/2 w-2/3 max-w-lg h-px bg-gradient-to-r from-transparent via-cyan/40 to-transparent" />
       </section>
 
       {/* HEAT THIS WEEK */}
       <section id="heat" className="max-w-7xl mx-auto px-6 pt-20 pb-16">
-        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-10">
+        <div className="flex items-end justify-between mb-10">
           <div>
             <div className="uppercase tracking-[4px] text-xs text-cyan mb-3">THIS WEEK&apos;S HEAT</div>
-            <h2 className="text-5xl md:text-6xl tracking-[-3.5px] font-semibold">Featured Drops</h2>
+            <h2 className="section-header text-5xl tracking-[-3px] font-semibold">Featured Drops</h2>
           </div>
-          <a href="#arsenal" className="text-sm text-cyan hover:underline flex items-center gap-1.5">
-            VIEW FULL ARSENAL <ArrowRight size={15} />
+          <a href="#arsenal" className="hidden md:flex items-center gap-2 text-sm text-cyan hover:underline">
+            VIEW FULL ARSENAL <ArrowRight size={16} />
           </a>
         </div>
 
@@ -93,11 +100,11 @@ export default function HeatVSTLanding() {
           {featuredVSTs.map((vst, index) => (
             <motion.div
               key={vst.slug}
-              initial={{ opacity: 0, y: 50 }}
+              initial={{ opacity: 0, y: 40 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1, ease: [0.23, 1, 0.32, 1] }}
+              transition={{ delay: index * 0.08 }}
             >
-              <VSTCard vst={vst} featured />
+              <VSTCard vst={vst} />
             </motion.div>
           ))}
         </div>
