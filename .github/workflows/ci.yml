@@ -24,8 +24,11 @@ jobs:
         run: |
           if [ -f yarn.lock ]; then
             yarn install --frozen-lockfile
-          else
+          elif [ -f package-lock.json ]; then
             npm ci --legacy-peer-deps
+          else
+            echo "No lock file found. Generating one..."
+            npm install --legacy-peer-deps
           fi
 
       - name: Run linter
